@@ -46,9 +46,22 @@ static const char *TAG = "example";
 #define EXAMPLE_LCD_CMD_BITS           8
 #define EXAMPLE_LCD_PARAM_BITS         8
 
+extern void example_lvgl_demo_ui(lv_disp_t *disp);
 
-void i2c_oled_start(i2c_master_bus_handle_t i2c_bus)
+void i2c_oled_init()
 {
+    ESP_LOGI(TAG, "Initialize I2C bus");
+    i2c_master_bus_handle_t i2c_bus = NULL;
+    i2c_master_bus_config_t bus_config = {
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .i2c_port = I2C_BUS_PORT,
+        .sda_io_num = EXAMPLE_PIN_NUM_SDA,
+        .scl_io_num = EXAMPLE_PIN_NUM_SCL,
+        .flags.enable_internal_pullup = true,
+    };
+    ESP_ERROR_CHECK(i2c_new_master_bus(&bus_config, &i2c_bus));
+
     ESP_LOGI(TAG, "Install panel IO");
     esp_lcd_panel_io_handle_t io_handle = NULL;
     esp_lcd_panel_io_i2c_config_t io_config = {
@@ -115,4 +128,15 @@ void i2c_oled_start(i2c_master_bus_handle_t i2c_bus)
 
     /* Rotation of the screen */
     lv_disp_set_rotation(disp, LV_DISP_ROT_NONE);
+
+#if 0
+    ESP_LOGI(TAG, "Display LVGL Scroll Text");
+    // Lock the mutex due to the LVGL APIs are not thread-safe
+    if (lvgl_port_lock(0)) {
+        example_lvgl_demo_ui(disp);
+        // Release the mutex
+        lvgl_port_unlock();
+    }
+#endif
+    
 }
